@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="36px" height="36px" viewBox="0 0 36 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>图标/无障碍/指读备份</title>
+    <g id="图标/无障碍/指读备份" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="4.5" y1="4.94262295" x2="31.5" y2="4.94262295" id="路径-7" stroke="#FFFFFF" stroke-width="4"></line>
+        <g id="编组" transform="translate(18.550000, 22.557446) rotate(-45.000000) translate(-18.550000, -22.557446) translate(4.032866, 7.417431)" stroke="#FFFFFF" stroke-width="4">
+            <line x1="4.16711731" y1="5.5825861" x2="24.8671508" y2="25.9432083" id="路径" transform="translate(14.517134, 15.762897) rotate(-315.000000) translate(-14.517134, -15.762897) "></line>
+            <polyline id="路径" transform="translate(14.517134, 11.992438) rotate(-315.000000) translate(-14.517134, -11.992438) " points="23.0671341 3.58256935 5.96713406 3.58256935 5.96713406 20.4023076"></polyline>
+        </g>
+    </g>
+</svg>

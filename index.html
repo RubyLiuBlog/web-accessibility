@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>无障碍工具栏演示</title>
+  <link rel="stylesheet" type="text/css" media="screen" rel="stylesheet" href="./webtoolbar.css">
+</head>
+
+<body>
+  <!-- 无障碍触发按钮 -->
+  <button id="accessibility-trigger" aria-label="打开无障碍工具栏" title="点击打开无障碍工具栏 (快捷键: Alt+A)">
+    <span style="font-size: 14px;">♿</span>
+    无障碍
+  </button>
+
+  <!-- 无障碍工具栏 -->
+  <div id="accessibility-toolbar" class="accessibility-toolbar">
+    <div class="accessibility-toolbar-list">
+      <div class="accessibility-toolbar-item" id="go-home">
+        <span class="title">首页</span>
+        <div class="icon">
+          <img src="./png/home.png" alt="首页" />
+        </div>
+      </div>
+      <div class="accessibility-toolbar-item" id="zoom-in">
+        <span class="title">放大</span>
+        <div class="icon">
+          <img src="./png/zoom-in.png" alt="放大" />
+        </div>
+      </div>
+      <div class="accessibility-toolbar-item" id="zoom-out">
+        <span class="title">缩小</span>
+        <div class="icon">
+          <img src="./png/zoom-out.png" alt="缩小" />
+        </div>
+      </div>
+      <div class="accessibility-toolbar-item" id="high-contrast">
+        <span class="title">对比色</span>
+        <div class="icon">
+          <img src="./png/high-contrast.png" alt="对比色" />
+        </div>
+      </div>
+      <div class="accessibility-toolbar-item" id="large-cursor" style="margin-left: 12px;">
+        <span class="title">鼠标</span>
+        <div class="icon">
+          <img src="./png/large-cursor.png" alt="鼠标" />
+        </div>
+      </div>
+      <div class="accessibility-toolbar-item" id="reading-guide">
+        <span class="title">辅助线</span>
+        <div class="icon">
+          <img src="./png/reading-guide.png" alt="辅助线" />
+        </div>
+      </div>
+      <div class="accessibility-toolbar-item" id="text-only">
+        <span class="title">纯文本</span>
+        <div class="icon">
+          <img src="./png/text-only.png" alt="纯文本" />
+        </div>
+      </div>
+
+      <div class="accessibility-toolbar-item" id="large-tooltip">
+        <span class="title">大字幕</span>
+        <div class="icon">
+          <img src="./png/large-tooltip.png" alt="大字幕" />
+        </div>
+      </div>
+      <div class="accessibility-toolbar-item" id="speech-volume" style="margin-left: 12px; position: relative;">
+        <span class="title">声音</span>
+        <div class="icon">
+          <img src="./png/volume.png" alt="声音" />
+        </div>
+        <div class="volume-control">
+          <div class="slider-label">音量</div>
+          <input type="range" class="slider" id="volume-slider" min="0" max="1" step="0.1" value="0.7">
+        </div>
+      </div>
+      <div class="accessibility-toolbar-item" id="speech-toggle">
+        <span class="title">指读</span>
+        <div class="icon">
+          <img src="./png/point-reading.png" alt="指读" />
+        </div>
+      </div>
+      <div class="accessibility-toolbar-item" id="speech-mode">
+        <span class="title">连读</span>
+        <div class="icon">
+          <img src="./png/continuous-reading.png" alt="连读" />
+        </div>
+      </div>
+      <div class="accessibility-toolbar-item" id="speech-rate" style="position: relative;">
+        <span class="title">语速</span>
+        <div class="icon">
+          <img src="./png/speech-rate.png" alt="语速" />
+        </div>
+        <div class="rate-control">
+          <div class="slider-label">语速</div>
+          <input type="range" class="slider" id="rate-slider" min="0.5" max="2" step="0.1" value="1">
+        </div>
+      </div>
+      <div class="accessibility-toolbar-item" id="zoom-reset" style="margin-left: 12px;">
+        <span class="title">重置</span>
+        <div class="icon">
+          <img src="./png/reset.png" alt="重置" />
+        </div>
+      </div>
+      <div class="accessibility-toolbar-item" id="speech-description">
+        <span class="title">说明</span>
+        <div class="icon">
+          <img src="./png/help.png" alt="说明" />
+        </div>
+      </div>
+      <div class="accessibility-toolbar-item" id="close-toolbar">
+        <span class="title">关闭</span>
+        <div class="icon">
+          <img src="./png/close.png" alt="关闭" />
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 阅读辅助线 -->
+  <div class="reading-guide-line horizontal"></div>
+  <div class="reading-guide-line vertical"></div>
+
+  <!-- 大字幕显示区域 -->
+  <div id="large-tooltip-display" class="large-tooltip-display">
+    <div class="tooltip-content"></div>
+  </div>
+
+  <!-- 页面内容 -->
+  <main class="menu-container" style="padding: 20px; max-width: 800px; margin-left: auto; margin-right: auto;">
+    <h1>无障碍工具栏演示页面</h1>
+    <p>这是一个演示无障碍功能的页面。您可以使用上方的工具栏来体验各种无障碍辅助功能。</p>
+
+    <h2>功能说明</h2>
+    <ul>
+      <li><strong>放大/缩小</strong>：调整页面的显示比例，方便视力不佳的用户阅读</li>
+      <li><strong>对比色</strong>：切换到高对比度模式，提高文字和背景的对比度</li>
+      <li><strong>鼠标</strong>：启用大鼠标光标，更容易看到鼠标位置</li>
+      <li><strong>辅助线</strong>：显示跟随鼠标的辅助线，帮助定位阅读位置</li>
+      <li><strong>纯文本</strong>：移除所有装饰性样式，只保留基本的文本格式和结构</li>
+      <li><strong>大字幕</strong>：鼠标悬停时显示大字号的提示信息</li>
+      <li><strong>语音功能</strong>：支持点击朗读和连续朗读，可调节音量和语速</li>
+    </ul>
+
+    <h2>操作指南</h2>
+    <p>1. 点击工具栏中的任意功能按钮来启用对应功能</p>
+    <p>2. 选中的功能按钮会显示红色背景</p>
+    <p>3. 点击"声音"或"语速"按钮会显示拖拽滑块进行调节</p>
+    <p>4. 使用快捷键 Alt+A 可以显示或隐藏工具栏</p>
+    <p>5. 点击"重置"按钮可以恢复所有设置到默认状态</p>
+
+    <h2>测试内容</h2>
+    <p>这里有一些测试内容，您可以尝试不同的无障碍功能：</p>
+
+    <div style="display: flex; gap: 20px; margin: 20px 0;">
+      <img src="./png/home.png" alt="首页图标" style="width: 50px; height: 50px;">
+      <img src="./png/zoom-in.png" alt="放大图标" style="width: 50px; height: 50px;">
+      <img src="./png/volume.png" alt="声音图标" style="width: 50px; height: 50px;">
+    </div>
+
+    <p>尝试启用"纯文本"模式，页面将移除所有装饰性样式，只保留基本的文本格式。</p>
+    <p>启用"指读"功能后，点击任意文本都会进行语音朗读。</p>
+    <p>启用"连读"模式后，点击页面会自动朗读整个页面内容。</p>
+
+    <button
+      style="padding: 10px 20px; margin: 10px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+      测试按钮 1
+    </button>
+    <button
+      style="padding: 10px 20px; margin: 10px; background: #28a745; color: white; border: none; border-radius: 5px; cursor: pointer;">
+      测试按钮 2
+    </button>
+    <button
+      style="padding: 10px 20px; margin: 10px; background: #dc3545; color: white; border: none; border-radius: 5px; cursor: pointer;">
+      测试按钮 3
+    </button>
+  </main>
+  <script defer type="text/javascript" src="./accessibilityplugin.js"></script>
+  <script defer type="text/javascript" src="./webtoolbar.js"></script>
+</body>
+
+</html>

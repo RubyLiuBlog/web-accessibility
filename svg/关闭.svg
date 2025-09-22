@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="36px" height="36px" viewBox="0 0 36 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>图标/无障碍/退出备份</title>
+    <g id="图标/无障碍/退出备份" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10.75,6.07692308 C10.2467737,6.36655385 9.76262632,6.68540769 9.3,7.03116154 C8.50822368,7.62284615 7.77933158,8.29338462 7.125,9.03092308 C4.86892974,11.5740769 3.5,14.9146923 3.5,18.5734615 C3.5,26.541 9.99187895,33 18,33 C26.0081211,33 32.5,26.541 32.5,18.5734615 C32.5,14.9146923 31.1310474,11.5740769 28.875,9.03092308 C28.2206684,8.29338462 27.4917763,7.62284615 26.7,7.03116154 C26.2373737,6.68540769 25.7532263,6.36655385 25.25,6.07692308" id="路径" stroke="#FFFFFF" stroke-width="4"></path>
+        <line x1="18" y1="3" x2="18" y2="14.6129032" id="路径" stroke="#FFFFFF" stroke-width="4"></line>
+    </g>
+</svg>

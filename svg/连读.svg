@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="36px" height="36px" viewBox="0 0 36 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>图标/无障碍/连读备份</title>
+    <g id="图标/无障碍/连读备份" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+        <g id="编组" transform="translate(2.200000, 9.800000)" stroke="#FFFFFF" stroke-width="4">
+            <polyline id="路径" points="-1.31363143e-17 7.75218236 4.14793931 7.75218236 6.8 -1.08996145e-14 11.8 16.4 15.8 3.4 19.8 11.9447527 24.0011628 7.75218236 30.2902786 7.75218236"></polyline>
+            <polyline id="路径" transform="translate(26.409052, 8.199052) rotate(45.000000) translate(-26.409052, -8.199052) " points="22.6549853 4.63745533 30.1631187 4.44498533 29.9706487 11.9531187"></polyline>
+        </g>
+    </g>
+</svg>

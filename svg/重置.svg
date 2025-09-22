@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="36px" height="36px" viewBox="0 0 36 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>图标/无障碍/重置备份</title>
+    <g id="图标/无障碍/重置备份" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M27.8994778,27.8994778 C25.3660222,30.4330111 21.8660222,32 18,32 C10.2680333,32 4,25.7319667 4,18 C4,10.2680333 10.2680333,4 18,4 C21.8660222,4 25.3660222,5.56700444 27.8994778,8.10052222 C29.1890333,9.39007778 32,12.5555556 32,12.5555556" id="路径" stroke="#FFFFFF" stroke-width="4"></path>
+        <polyline id="路径" stroke="#FFFFFF" stroke-width="4" points="32 5.55555556 32 12.5555556 25 12.5555556"></polyline>
+    </g>
+</svg>

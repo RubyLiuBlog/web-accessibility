@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="36px" height="36px" viewBox="0 0 36 36" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>图标/无障碍/静音备份</title>
+    <g id="图标/无障碍/静音备份" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M35.5999944,17.9942557 L20,18.0074679 M27.8066033,10.2008646 L27.7933911,25.800859" id="形状结合" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" transform="translate(27.799997, 18.000862) rotate(45.000000) translate(-27.799997, -18.000862) "></path>
+        <path d="M18.4714286,2.5 L18.4714286,33.5 C12.5314286,33.5 8.11758429,25.6114472 8.11758429,25.6114472 L3.19714286,25.6114472 C2.25983631,25.6114472 1.5,24.8404083 1.5,23.889225 L1.5,11.9815222 C1.5,11.0303389 2.25983631,10.2593 3.19714286,10.2593 L8.11758429,10.2593 C8.11758429,10.2593 12.5314286,2.5 18.4714286,2.5 Z" id="路径" fill="#FFFFFF"></path>
+    </g>
+</svg>

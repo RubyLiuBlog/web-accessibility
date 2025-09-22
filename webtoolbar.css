@@ -1,0 +1,385 @@
+/* 基础重置 */
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.6;
+      color: #333;
+      background-color: #fff;
+      transition: all 0.3s ease;
+    }
+
+    /* 无障碍触发按钮 */
+    #accessibility-trigger {
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* 无障碍工具栏 */
+    #accessibility-toolbar {
+      display: flex;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      max-height: 164px;
+      background: #646464;
+      z-index: 1000;
+      padding: 28px 0;
+      transition: all 0.3s ease;
+      transform: translateY(-100%);
+      opacity: 0;
+      visibility: hidden;
+      /* 确保工具栏不受页面缩放影响 */
+      transform-origin: top center;
+    }
+
+    #accessibility-toolbar.show {
+      transform: translateY(0);
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .accessibility-toolbar-list {
+      margin: auto;
+      display: flex;
+      flex-direction: row;
+      gap: 6px;
+    }
+
+    .accessibility-toolbar-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+
+    }
+
+    .accessibility-toolbar-item .title {
+      color: #ffffff;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .accessibility-toolbar-item .icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #333333;
+      height: 72px;
+      width: 72px;
+      border-radius: 8px;
+    }
+
+    .accessibility-toolbar-item .icon img {
+      height: 36px;
+      width: 36px;
+    }
+
+    /* 选中状态样式 */
+    .accessibility-toolbar-item.active .icon {
+      background-color: red !important;
+    }
+
+    /* 阅读辅助线样式 */
+    .reading-guide-line {
+      position: fixed;
+      pointer-events: none;
+      z-index: 999;
+      display: none;
+    }
+
+    .reading-guide-line.horizontal {
+      width: 100%;
+      height: 2px;
+      background-color: #ff0000;
+      left: 0;
+    }
+
+    .reading-guide-line.vertical {
+      width: 2px;
+      height: 100%;
+      background-color: #ff0000;
+      top: 0;
+    }
+
+    /* 当辅助线激活时显示 */
+    .reading-guide-line.active {
+      display: block !important;
+    }
+
+    /* 大字幕样式 */
+    .large-tooltip-display {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      color: white;
+      padding: 15px 25px;
+      border-radius: 8px;
+      font-size: 24px;
+      font-weight: bold;
+      z-index: 1001;
+      display: none;
+      max-width: 80%;
+      text-align: center;
+      /* 确保大字幕不受页面缩放影响 */
+      transform-origin: center bottom;
+    }
+
+    /* 高对比度模式 */
+    body.high-contrast {
+      background: #000 !important;
+      color: #fff !important;
+    }
+
+    body.high-contrast *:not(.accessibility-toolbar):not(.accessibility-toolbar *) {
+      background: #000 !important;
+      color: #fff !important;
+      border-color: #fff !important;
+    }
+
+    /* 保持工具栏原有样式不变 */
+    body.high-contrast .accessibility-toolbar,
+    body.high-contrast .accessibility-toolbar * {
+      background: initial !important;
+      color: initial !important;
+    }
+
+    body.high-contrast #accessibility-trigger {
+      background: #007bff !important;
+      color: white !important;
+    }
+
+    /* 纯文本模式 */
+    body.text-only {
+      background: #fff !important;
+      font-family: serif !important;
+      font-size: 16px !important;
+      line-height: 1.6 !important;
+      color: #000 !important;
+    }
+
+    body.text-only *:not(.accessibility-toolbar):not(.accessibility-toolbar *) {
+      background: transparent !important;
+      border: none !important;
+      border-radius: 0 !important;
+      box-shadow: none !important;
+      text-shadow: none !important;
+      font-family: inherit !important;
+      font-size: inherit !important;
+      font-weight: normal !important;
+      font-style: normal !important;
+      text-decoration: none !important;
+      color: inherit !important;
+      margin: 0.5em 0 !important;
+      padding: 0 !important;
+      float: none !important;
+      position: static !important;
+      top: auto !important;
+      left: auto !important;
+      right: auto !important;
+      bottom: auto !important;
+      width: auto !important;
+      height: auto !important;
+      max-width: none !important;
+      max-height: none !important;
+      min-width: 0 !important;
+      min-height: 0 !important;
+      transform: none !important;
+      transition: none !important;
+      animation: none !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      z-index: auto !important;
+      overflow: visible !important;
+      clip-path: none !important;
+      filter: none !important;
+      backdrop-filter: none !important;
+    }
+
+    /* 隐藏媒体和装饰性元素 */
+    body.text-only img,
+    body.text-only video,
+    body.text-only canvas,
+    body.text-only svg,
+    body.text-only iframe,
+    body.text-only object,
+    body.text-only embed,
+    body.text-only audio {
+      display: none !important;
+    }
+
+    /* 保持基本的文本结构 */
+    body.text-only h1,
+    body.text-only h2,
+    body.text-only h3,
+    body.text-only h4,
+    body.text-only h5,
+    body.text-only h6 {
+      font-weight: bold !important;
+      font-size: 1.2em !important;
+      margin: 1em 0 0.5em 0 !important;
+      display: block !important;
+    }
+
+    body.text-only h1 { font-size: 1.8em !important; }
+    body.text-only h2 { font-size: 1.6em !important; }
+    body.text-only h3 { font-size: 1.4em !important; }
+
+    body.text-only p {
+      display: block !important;
+      margin: 0.5em 0 !important;
+    }
+
+    body.text-only ul,
+    body.text-only ol {
+      display: block !important;
+      margin: 0.5em 0 !important;
+      padding-left: 2em !important;
+    }
+
+    body.text-only li {
+      display: list-item !important;
+      margin: 0.2em 0 !important;
+    }
+
+    body.text-only ul li {
+      list-style-type: disc !important;
+    }
+
+    body.text-only ol li {
+      list-style-type: decimal !important;
+    }
+
+    body.text-only a {
+      text-decoration: underline !important;
+      color: #0000EE !important;
+    }
+
+    body.text-only strong,
+    body.text-only b {
+      font-weight: bold !important;
+    }
+
+    body.text-only em,
+    body.text-only i {
+      font-style: italic !important;
+    }
+
+    body.text-only blockquote {
+      margin: 1em 2em !important;
+      font-style: italic !important;
+    }
+
+    body.text-only pre,
+    body.text-only code {
+      font-family: monospace !important;
+      background: #f5f5f5 !important;
+      padding: 0.2em !important;
+    }
+
+    body.text-only table {
+      border-collapse: collapse !important;
+      margin: 1em 0 !important;
+    }
+
+    body.text-only td,
+    body.text-only th {
+      border: 1px solid #000 !important;
+      padding: 0.5em !important;
+      text-align: left !important;
+    }
+
+    body.text-only th {
+      font-weight: bold !important;
+    }
+
+    /* 保持工具栏原有样式不变 */
+    body.text-only .accessibility-toolbar,
+    body.text-only .accessibility-toolbar * {
+      all: revert !important;
+    }
+
+    body.text-only #accessibility-trigger {
+      background: #007bff !important;
+      color: white !important;
+      border: 1px solid #007bff !important;
+      border-radius: 4px !important;
+      padding: 8px 12px !important;
+    }
+
+    /* 大鼠标样式 */
+    body.large-cursor {
+      /* cursor: url('./svg/cursor-svgrepo-com.svg'), auto !important; */
+      cursor: url("data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg' stroke='%2303fcec'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M1.5 4.075C.897 2.467 2.467.897 4.075 1.5l17.14 6.428c1.907.715 1.65 3.488-.354 3.842l-7.727 1.364-1.364 7.727c-.354 2.005-3.127 2.26-3.842.354L1.5 4.075zm1.873-.702L9.8 20.513l1.364-7.727a2 2 0 0 1 1.622-1.622L20.513 9.8 3.373 3.373z' fill='%237300ff'/%3E%3C/svg%3E"), auto !important;
+    }
+
+    /* 音量和语速滑块样式 */
+    .volume-control,
+    .rate-control {
+      display: none;
+      position: absolute;
+      top: -30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      padding: 5px 5px 10px 5px;
+      border-radius: 8px;
+      min-width: 150px;
+    }
+
+    .volume-control.show,
+    .rate-control.show {
+      display: block;
+    }
+
+    .slider {
+      width: 100%;
+      height: 6px;
+      border-radius: 3px;
+      background: #333;
+      outline: none;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    .slider::-webkit-slider-thumb {
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    .slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      border: none;
+    }
+
+    .slider-label {
+      color: white;
+      font-size: 12px;
+      text-align: center;
+      margin-bottom: 2px;
+    }
+
+    .reading-guide-line {
+      position: fixed;
+      pointer-events: none;
+      z-index: 999;
+      display: none;
+    }
