@@ -57,7 +57,12 @@ class AccessibilityPlugin {
 
 				// 辅助线
 				readingGuideLineHorizontal: '.reading-guide-line.horizontal',
-				readingGuideLineVertical: '.reading-guide-line.vertical'
+				readingGuideLineVertical: '.reading-guide-line.vertical',
+
+				// 关闭
+				closeToolbar: '#close-toolbar',
+				// 说明
+				description: '#speech-description'
 			},
 
 			// CSS类名配置
@@ -176,6 +181,7 @@ class AccessibilityPlugin {
 		if (this.state.isInitialized) return;
 
 		try {
+			this.markTouchDevice();
 			this.bindElements();
 			this.bindEvents();
 			this.setupKeyboardNavigation();
@@ -188,6 +194,20 @@ class AccessibilityPlugin {
 			console.log('无障碍辅助插件初始化完成');
 		} catch (error) {
 			console.error('无障碍插件初始化失败:', error);
+		}
+	}
+
+	/**
+	 * 标记触摸设备，供样式与逻辑分支使用
+	 */
+	markTouchDevice() {
+		try {
+			const isTouch = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0);
+			if (isTouch) {
+				document.body.classList.add('touch-device');
+			}
+		} catch (e) {
+			// noop
 		}
 	}
 
@@ -220,8 +240,7 @@ class AccessibilityPlugin {
 		this.addEventListenerSafe(closeBtn, 'click', () => this.toggleToolbar());
 
 		// 关闭工具栏功能
-		const closeToolbarBtn = document.getElementById('close-toolbar');
-		this.addEventListenerSafe(closeToolbarBtn, 'click', () => this.handleCloseToolbar());
+		this.addEventListenerSafe(this.elements.closeToolbar, 'click', () => this.handleCloseToolbar());
 
 		this.addEventListenerSafe(this.elements.goHome, 'click', () => this.goHome());
 
@@ -268,7 +287,20 @@ class AccessibilityPlugin {
 		this.addEventListenerSafe(document, 'mousemove', (e) => this.handleMouseMove(e));
 		this.addEventListenerSafe(document, 'mouseover', (e) => this.handleMouseOver(e));
 		this.addEventListenerSafe(document, 'mouseout', () => this.handleMouseOut());
+		this.addEventListenerSafe(document, 'scroll', () => this.handleScroll());
 		this.addEventListenerSafe(document, 'click', (e) => this.handleClick(e));
+
+		this.addEventListenerSafe(document, 'touchmove', (e) => {
+			if (!this.state.readingGuideEnabled) return;
+			const t = e.touches && e.touches[0];
+			if (!t) return;
+			if (this.elements.readingGuideLineHorizontal) {
+				this.elements.readingGuideLineHorizontal.style.top = t.clientY / this.state.currentZoom + 'px';
+			}
+			if (this.elements.readingGuideLineVertical) {
+				this.elements.readingGuideLineVertical.style.left = t.clientX / this.state.currentZoom + 'px';
+			}
+		}, { passive: true });
 
 		// ESC键关闭工具栏
 		this.addEventListenerSafe(document, 'keydown', (e) => {
@@ -293,6 +325,13 @@ class AccessibilityPlugin {
 			document.querySelector('.rate-control')?.classList.remove('show');
 		});
 
+		// 触摸也可触发弹出
+		this.addEventListenerSafe(volumeControl, 'touchstart', (e) => {
+			e.stopPropagation();
+			volumeDisplay?.classList.toggle('show');
+			document.querySelector('.rate-control')?.classList.remove('show');
+		}, { passive: true });
+
 		this.addEventListenerSafe(volumeSlider, 'input', (e) => {
 			this.setSpeechVolume(e.target.value);
 		});
@@ -309,6 +348,12 @@ class AccessibilityPlugin {
 			// 关闭音量控制
 			document.querySelector('.volume-control')?.classList.remove('show');
 		});
+
+		this.addEventListenerSafe(rateControl, 'touchstart', (e) => {
+			e.stopPropagation();
+			rateDisplay?.classList.toggle('show');
+			document.querySelector('.volume-control')?.classList.remove('show');
+		}, { passive: true });
 
 		this.addEventListenerSafe(rateSlider, 'input', (e) => {
 			this.setSpeechRate(e.target.value);
@@ -345,6 +390,12 @@ class AccessibilityPlugin {
 					}
 				}
 			});
+
+			// 触摸瞬时反馈
+			this.addEventListenerSafe(item, 'touchstart', () => {
+				item.classList.add('active');
+				setTimeout(() => item.classList.remove('active'), 180);
+			}, { passive: true });
 		});
 	}
 
@@ -379,14 +430,15 @@ class AccessibilityPlugin {
 	 * 处理关闭工具栏按钮
 	 */
 	handleCloseToolbar() {
-		this.toggleToolbar();
-		const closeBtn = document.getElementById('close-toolbar');
+		const closeBtn = this.elements.closeToolbar;
 		if (closeBtn) {
 			closeBtn.classList.add('active');
 			setTimeout(() => {
 				closeBtn.classList.remove('active');
 			}, 500);
 		}
+		this.handleResetAll();
+		this.toggleToolbar();
 	}
 
 	/**
@@ -415,7 +467,7 @@ class AccessibilityPlugin {
 		if (this.state.largeCursorEnabled) {
 			this.toggleLargeCursor();
 		}
-		if (this.state.speechEnabled) {
+		if (this.state.speechEnabled && !document.body.classList.contains('touch-device')) {
 			this.toggleSpeech();
 		}
 
@@ -471,9 +523,9 @@ class AccessibilityPlugin {
 	/**
 	 * 安全添加事件监听器（避免null元素）
 	 */
-	addEventListenerSafe(element, event, handler) {
+	addEventListenerSafe(element, event, handler, options) {
 		if (element) {
-			element.addEventListener(event, handler);
+			element.addEventListener(event, handler, options);
 			this.eventListeners.push({ element, event, handler });
 		}
 	}
@@ -548,39 +600,44 @@ class AccessibilityPlugin {
 	/**
 	 * 工具栏切换
 	 */
-	toggleToolbar() {
+	toggleToolbar(force) {
 		const toolbar = this.elements.toolbar;
 		const trigger = this.elements.toolbarToggle;
 		if (!toolbar) return;
 
-		this.state.toolbarCollapsed = !this.state.toolbarCollapsed;
+		const collapsed = (typeof force === 'boolean') ? !!force : !this.state.toolbarCollapsed;
+		this.state.toolbarCollapsed = collapsed;
 
 		if (this.state.toolbarCollapsed) {
 			// 隐藏工具栏
 			toolbar.classList.remove('show');
 			trigger?.classList.remove('active');
 			trigger?.setAttribute('aria-label', '打开无障碍工具栏');
-			// 工具栏隐藏时，页面内容的上边距恢复
-			const mainElement = document.querySelector('body');
-			if (mainElement) {
-				mainElement.style.paddingTop = '0px';
+			// 重新显示触发按钮
+			if (trigger) trigger.style.display = '';
+			// 桌面端顶部停靠会占位，移动端底部悬浮不占位
+			if (!document.body.classList.contains('touch-device')) {
+				const mainElement = document.querySelector('body');
+				if (mainElement) mainElement.style.paddingTop = '0px';
+			} else {
+				const mainElement = document.querySelector('body');
+				if (mainElement) mainElement.style.paddingBottom = '0px';
 			}
 		} else {
 			// 显示工具栏
 			toolbar.classList.add('show');
 			trigger?.classList.add('active');
 			trigger?.setAttribute('aria-label', '关闭无障碍工具栏');
-			// 当工具栏显示时，页面内容保持足够的上边距
-			const mainElement = document.querySelector('body');
-			if (mainElement) {
-				mainElement.style.paddingTop = '200px';
+			// 打开后隐藏触发按钮
+			if (trigger) trigger.style.display = 'none';
+			// 桌面端顶部停靠给出上边距；移动端底部悬浮不修改 body
+			if (!document.body.classList.contains('touch-device')) {
+				const mainElement = document.querySelector('body');
+				if (mainElement) mainElement.style.paddingTop = '200px';
+			} else {
+				const mainElement = document.querySelector('body');
+				if (mainElement) mainElement.style.paddingBottom = '120px';
 			}
-
-			// 焦点管理 - 将焦点移动到工具栏的第一个可操作元素
-			setTimeout(() => {
-				const firstButton = toolbar.querySelector('.control-btn');
-				if (firstButton) firstButton.focus();
-			}, 300);
 		}
 
 		// 更新切换按钮图标
@@ -595,6 +652,7 @@ class AccessibilityPlugin {
 		});
 
 		this.speak('工具栏' + (this.state.toolbarCollapsed ? '已关闭' : '已打开'));
+		this.saveState();
 	}
 
 	/**
@@ -611,16 +669,19 @@ class AccessibilityPlugin {
 	zoomIn() {
 		this.state.currentZoom = Math.min(this.state.currentZoom + 0.1, 3);
 		this.applyZoom();
+		this.saveState();
 	}
 
 	zoomOut() {
 		this.state.currentZoom = Math.max(this.state.currentZoom - 0.1, 0.5);
 		this.applyZoom();
+		this.saveState();
 	}
 
 	resetZoom() {
 		this.state.currentZoom = 1;
 		this.applyZoom();
+		this.saveState();
 	}
 
 	applyZoom() {
@@ -638,14 +699,15 @@ class AccessibilityPlugin {
 
 		// 调整工具栏位置和大小，保持固定定位不受页面缩放影响
 		if (this.elements.toolbar) {
-			// 重置工具栏的transform，保持原始状态
 			const isVisible = this.elements.toolbar.classList.contains('show');
+			const isTouch = document.body.classList.contains('touch-device');
 			if (isVisible) {
 				this.elements.toolbar.style.transform = 'translateY(0) scale(1)';
 			} else {
-				this.elements.toolbar.style.transform = 'translateY(-100%) scale(1)';
+				// 顶部/底部的隐藏方向不同
+				this.elements.toolbar.style.transform = isTouch ? 'translateY(100%) scale(1)' : '';
 			}
-			this.elements.toolbar.style.transformOrigin = 'top center';
+			this.elements.toolbar.style.transformOrigin = isTouch ? 'bottom center' : '';
 		}
 
 		// 同时调整触发按钮，保持在页面缩放时的固定位置
@@ -654,9 +716,6 @@ class AccessibilityPlugin {
 			this.elements.toolbarToggle.style.transformOrigin = 'center';
 		}
 
-		// 调整大字幕显示区域，保持在页面缩放时的固定位置
-		this.adjustLargeTooltipPosition();
-
 		this.triggerCallback('onZoomChange', { zoom: this.state.currentZoom });
 		this.speak(`页面缩放${Math.round(this.state.currentZoom * 100)}%`);
 	}
@@ -664,8 +723,9 @@ class AccessibilityPlugin {
 	/**
 	 * 高对比度模式
 	 */
-	toggleHighContrast() {
-		this.state.highContrastEnabled = !this.state.highContrastEnabled;
+	toggleHighContrast(force) {
+		const enabled = (typeof force === 'boolean') ? !!force : !this.state.highContrastEnabled;
+		this.state.highContrastEnabled = enabled;
 
 		const contrastTarget = this.targetElements.contrastTarget || document.body;
 
@@ -683,13 +743,15 @@ class AccessibilityPlugin {
 			feature: 'highContrast',
 			enabled: this.state.highContrastEnabled
 		});
+		this.saveState();
 	}
 
 	/**
 	 * 纯文本模式
 	 */
-	toggleTextOnly() {
-		this.state.textOnlyEnabled = !this.state.textOnlyEnabled;
+	toggleTextOnly(force) {
+		const enabled = (typeof force === 'boolean') ? !!force : !this.state.textOnlyEnabled;
+		this.state.textOnlyEnabled = enabled;
 
 		const textOnlyTarget = this.targetElements.textOnlyTarget || document.body;
 
@@ -707,13 +769,15 @@ class AccessibilityPlugin {
 			feature: 'textOnly',
 			enabled: this.state.textOnlyEnabled
 		});
+		this.saveState();
 	}
 
 	/**
 	 * 阅读辅助线
 	 */
-	toggleReadingGuide() {
-		this.state.readingGuideEnabled = !this.state.readingGuideEnabled;
+	toggleReadingGuide(force) {
+		const enabled = (typeof force === 'boolean') ? !!force : !this.state.readingGuideEnabled;
+		this.state.readingGuideEnabled = enabled;
 
 		if (this.state.readingGuideEnabled) {
 			this.elements.readingGuideLineHorizontal?.classList.add(this.config.classes.active);
@@ -731,22 +795,23 @@ class AccessibilityPlugin {
 			feature: 'readingGuide',
 			enabled: this.state.readingGuideEnabled
 		});
+		this.saveState();
 	}
 
 	/**
 	 * 大字幕功能
 	 */
-	toggleLargeTooltip() {
-		this.state.largeTooltipEnabled = !this.state.largeTooltipEnabled;
+	toggleLargeTooltip(force) {
+		const enabled = (typeof force === 'boolean') ? !!force : !this.state.largeTooltipEnabled;
+		this.state.largeTooltipEnabled = enabled;
 
 		if (this.state.largeTooltipEnabled) {
 			this.elements.largeTooltipDisplay?.classList.add(this.config.classes.active);
 			this.elements.largeTooltip?.classList.add(this.config.classes.active);
-			// 应用当前缩放比例的调整
-			this.adjustLargeTooltipPosition();
 		} else {
 			this.elements.largeTooltipDisplay?.classList.remove(this.config.classes.active);
 			this.elements.largeTooltip?.classList.remove(this.config.classes.active);
+			this.elements.largeTooltipDisplay.style.display = 'none';
 		}
 
 		this.speak('大字幕提示' + (this.state.largeTooltipEnabled ? '已开启' : '已关闭'));
@@ -755,24 +820,16 @@ class AccessibilityPlugin {
 			feature: 'largeTooltip',
 			enabled: this.state.largeTooltipEnabled
 		});
+		this.saveState();
 	}
 
-	/**
-	 * 调整大字幕位置以适应页面缩放
-	 */
-	adjustLargeTooltipPosition() {
-		if (this.elements.largeTooltipDisplay) {
-			// 确保大字幕不受页面缩放影响，保持在视口底部中央
-			this.elements.largeTooltipDisplay.style.transform = `translateX(-50%) scale(${1 / this.state.currentZoom})`;
-			this.elements.largeTooltipDisplay.style.transformOrigin = 'center bottom';
-		}
-	}
 
 	/**
 	 * 大鼠标功能
 	 */
-	toggleLargeCursor() {
-		this.state.largeCursorEnabled = !this.state.largeCursorEnabled;
+	toggleLargeCursor(force) {
+		const enabled = (typeof force === 'boolean') ? !!force : !this.state.largeCursorEnabled;
+		this.state.largeCursorEnabled = enabled;
 
 		const largeCursorTarget = this.targetElements.largeCursorTarget || document.body;
 
@@ -790,6 +847,7 @@ class AccessibilityPlugin {
 			feature: 'largeCursor',
 			enabled: this.state.largeCursorEnabled
 		});
+		this.saveState();
 	}
 
 	/**
@@ -798,10 +856,10 @@ class AccessibilityPlugin {
 	handleMouseMove(e) {
 		if (this.state.readingGuideEnabled) {
 			if (this.elements.readingGuideLineHorizontal) {
-				this.elements.readingGuideLineHorizontal.style.top = e.clientY + 'px';
+				this.elements.readingGuideLineHorizontal.style.top = e.clientY / this.state.currentZoom + 'px';
 			}
 			if (this.elements.readingGuideLineVertical) {
-				this.elements.readingGuideLineVertical.style.left = e.clientX + 'px';
+				this.elements.readingGuideLineVertical.style.left = e.clientX / this.state.currentZoom + 'px';
 			}
 		}
 	}
@@ -860,11 +918,27 @@ class AccessibilityPlugin {
 		}
 	}
 
+	handleScroll() {
+		// 当zoomTarget是body时，滚动需要调整大字幕位置
+		if (this.config.targets.zoomTarget === 'body' && this.state.largeTooltipEnabled && this.elements.largeTooltipDisplay) {
+			// 获取当前滚动位置
+			const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+			// 计算元素应该在的位置（视窗底部 - 元素距底部的距离）
+			const newTop = scrollTop + window.innerHeight - 120;
+			const element = this.elements.largeTooltipDisplay;
+			element.style.top = `${newTop}px`;
+		}
+	}
+
+
 	/**
 	 * 获取元素描述
 	 */
 	getElementDescription(element) {
 		if (!element || element === document.body) return '';
+		if (this.targetElements.mainContent && element === this.targetElements.mainContent) {
+			return '';
+		}
 
 		let text = '';
 
@@ -881,7 +955,9 @@ class AccessibilityPlugin {
 				'INPUT': '输入框',
 				'IMG': '图片',
 				'VIDEO': '视频',
-				'AUDIO': '音频'
+				'AUDIO': '音频',
+				'DIV': '容器',
+				'SELECT': '下拉框',
 			};
 			text = tagNames[element.tagName] || element.tagName.toLowerCase();
 		}
@@ -948,8 +1024,9 @@ class AccessibilityPlugin {
 	/**
 	 * 语音功能
 	 */
-	toggleSpeech() {
-		this.state.speechEnabled = !this.state.speechEnabled;
+	toggleSpeech(force) {
+		const enabled = (typeof force === 'boolean') ? !!force : !this.state.speechEnabled;
+		this.state.speechEnabled = enabled;
 
 		if (this.state.speechEnabled) {
 			this.elements.speechToggle?.classList.add(this.config.classes.active);
@@ -961,10 +1038,18 @@ class AccessibilityPlugin {
 		this.speak('语音朗读' + (this.state.speechEnabled ? '已开启' : '已关闭'));
 		this.updateToolbarItemState('speech', this.state.speechEnabled);
 		this.triggerCallback('onSpeechToggle', { enabled: this.state.speechEnabled });
+		this.saveState();
 	}
 
-	toggleSpeechMode() {
-		this.state.speechMode = this.state.speechMode === 'continuous' ? 'single' : 'continuous';
+	toggleSpeechMode(force) {
+		// force can be 'continuous' or 'single' or boolean true/false (true = continuous)
+		if (typeof force === 'string') {
+			this.state.speechMode = (force === 'continuous') ? 'continuous' : 'single';
+		} else if (typeof force === 'boolean') {
+			this.state.speechMode = force ? 'continuous' : 'single';
+		} else {
+			this.state.speechMode = this.state.speechMode === 'continuous' ? 'single' : 'continuous';
+		}
 		const modeText = this.state.speechMode === 'continuous' ? '连读' : '单读';
 		this.speak(`切换到${modeText}模式`);
 
@@ -973,14 +1058,17 @@ class AccessibilityPlugin {
 			feature: 'speechMode',
 			enabled: this.state.speechMode === 'continuous'
 		});
+		this.saveState();
 	}
 
 	setSpeechVolume(volume) {
 		this.state.speechVolume = parseFloat(volume);
+		this.saveState();
 	}
 
 	setSpeechRate(rate) {
 		this.state.speechRate = parseFloat(rate);
+		this.saveState();
 	}
 
 	handleClick(e) {
@@ -1128,19 +1216,68 @@ class AccessibilityPlugin {
 
 	applyRestoredState() {
 		// 应用恢复的状态
-		if (this.state.currentZoom !== 1) {
+		// 恢复缩放（applyZoom 会根据 state.currentZoom 应用）
+		if (typeof this.state.currentZoom === 'number') {
 			this.applyZoom();
 		}
-		if (this.state.highContrastEnabled) {
-			this.toggleHighContrast();
+
+		// 在恢复期间静默 speak 与 saveState，避免语音提示和重复写入
+		const origSpeak = this.speak;
+		const origSave = this.saveState;
+		this.speak = function(){};
+		this.saveState = function(){};
+		try {
+			// 使用 force 参数恢复各个开关，避免基于toggle的翻转副作用
+			this.toggleHighContrast(!!this.state.highContrastEnabled);
+			this.toggleTextOnly(!!this.state.textOnlyEnabled);
+			this.toggleLargeCursor(!!this.state.largeCursorEnabled);
+			this.toggleLargeTooltip(!!this.state.largeTooltipEnabled);
+			this.toggleReadingGuide(!!this.state.readingGuideEnabled);
+			this.toggleSpeech(!!this.state.speechEnabled);
+		} finally {
+			// 恢复 speak 与 saveState 实现
+			this.speak = origSpeak;
+			this.saveState = origSave;
 		}
-		if (this.state.textOnlyEnabled) {
-			this.toggleTextOnly();
+
+		// 恢复语音相关设置（滑块）
+		const volumeSlider = document.querySelector('#volume-slider');
+		const rateSlider = document.querySelector('#rate-slider');
+		if (volumeSlider) volumeSlider.value = this.state.speechVolume ?? this.config.defaults.speechVolume;
+		if (rateSlider) rateSlider.value = this.state.speechRate ?? this.config.defaults.speechRate;
+
+		// 恢复工具栏展开/收起状态 - 直接操作 DOM 避免 toggleToolbar 的副作用
+		const toolbar = this.elements.toolbar;
+		const trigger = this.elements.toolbarToggle;
+		if (toolbar) {
+			if (this.state.toolbarCollapsed) {
+				toolbar.classList.remove('show');
+				trigger?.classList.remove('active');
+				if (trigger) trigger.style.display = '';
+				if (!document.body.classList.contains('touch-device')) {
+					document.body.style.paddingTop = '0px';
+				} else {
+					document.body.style.paddingBottom = '0px';
+				}
+			} else {
+				toolbar.classList.add('show');
+				trigger?.classList.add('active');
+				if (trigger) trigger.style.display = 'none';
+				if (!document.body.classList.contains('touch-device')) {
+					document.body.style.paddingTop = '200px';
+				} else {
+					document.body.style.paddingBottom = '120px';
+				}
+				setTimeout(() => {
+					const firstButton = toolbar.querySelector('.control-btn');
+					if (firstButton) firstButton.focus();
+				}, 300);
+			}
+
+			// 更新切换图标
+			const toggleIcon = trigger?.querySelector('.icon');
+			if (toggleIcon) toggleIcon.style.transform = this.state.toolbarCollapsed ? 'rotate(0deg)' : 'rotate(45deg)';
 		}
-		if (this.state.largeCursorEnabled) {
-			this.toggleLargeCursor();
-		}
-		// 其他状态的恢复...
 	}
 
 	/**
@@ -1161,28 +1298,29 @@ class AccessibilityPlugin {
 	setZoom(zoom) {
 		this.state.currentZoom = Math.max(0.5, Math.min(3, zoom));
 		this.applyZoom();
+		this.saveState();
 	}
 
 	// 启用/禁用功能
 	enableFeature(feature) {
 		switch (feature) {
 			case 'highContrast':
-				if (!this.state.highContrastEnabled) this.toggleHighContrast();
+				if (!this.state.highContrastEnabled) this.toggleHighContrast(true);
 				break;
 			case 'textOnly':
-				if (!this.state.textOnlyEnabled) this.toggleTextOnly();
+				if (!this.state.textOnlyEnabled) this.toggleTextOnly(true);
 				break;
 			case 'readingGuide':
-				if (!this.state.readingGuideEnabled) this.toggleReadingGuide();
+				if (!this.state.readingGuideEnabled) this.toggleReadingGuide(true);
 				break;
 			case 'largeTooltip':
-				if (!this.state.largeTooltipEnabled) this.toggleLargeTooltip();
+				if (!this.state.largeTooltipEnabled) this.toggleLargeTooltip(true);
 				break;
 			case 'largeCursor':
-				if (!this.state.largeCursorEnabled) this.toggleLargeCursor();
+				if (!this.state.largeCursorEnabled) this.toggleLargeCursor(true);
 				break;
 			case 'speech':
-				if (!this.state.speechEnabled) this.toggleSpeech();
+				if (!this.state.speechEnabled) this.toggleSpeech(true);
 				break;
 		}
 	}
@@ -1190,22 +1328,22 @@ class AccessibilityPlugin {
 	disableFeature(feature) {
 		switch (feature) {
 			case 'highContrast':
-				if (this.state.highContrastEnabled) this.toggleHighContrast();
+				if (this.state.highContrastEnabled) this.toggleHighContrast(false);
 				break;
 			case 'textOnly':
-				if (this.state.textOnlyEnabled) this.toggleTextOnly();
+				if (this.state.textOnlyEnabled) this.toggleTextOnly(false);
 				break;
 			case 'readingGuide':
-				if (this.state.readingGuideEnabled) this.toggleReadingGuide();
+				if (this.state.readingGuideEnabled) this.toggleReadingGuide(false);
 				break;
 			case 'largeTooltip':
-				if (this.state.largeTooltipEnabled) this.toggleLargeTooltip();
+				if (this.state.largeTooltipEnabled) this.toggleLargeTooltip(false);
 				break;
 			case 'largeCursor':
-				if (this.state.largeCursorEnabled) this.toggleLargeCursor();
+				if (this.state.largeCursorEnabled) this.toggleLargeCursor(false);
 				break;
 			case 'speech':
-				if (this.state.speechEnabled) this.toggleSpeech();
+				if (this.state.speechEnabled) this.toggleSpeech(false);
 				break;
 		}
 	}

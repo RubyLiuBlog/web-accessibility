@@ -20,6 +20,10 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      padding: 8px 12px;
+      border-radius: 6px;
+      background: #007bff;
+      color: #fff;
     }
 
     /* 无障碍工具栏 */
@@ -117,7 +121,7 @@
 
     /* 大字幕样式 */
     .large-tooltip-display {
-      position: fixed;
+      position: absolute;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
@@ -382,4 +386,94 @@
       pointer-events: none;
       z-index: 999;
       display: none;
+    }
+
+    /* 触摸设备适配：隐藏不适用的按钮 */
+    body.touch-device #large-cursor {
+      display: none !important;
+    }
+
+    /* 响应式适配 —— 平板与小屏桌面 */
+    @media (max-width: 1024px) {
+      .accessibility-toolbar-item .title {
+        font-size: 14px;
+      }
+      .accessibility-toolbar-item .icon {
+        height: 64px;
+        width: 64px;
+      }
+      .accessibility-toolbar-item .icon img {
+        height: 30px;
+        width: 30px;
+      }
+    }
+
+    /* 响应式适配 —— 手机端（底部工具栏 + 横向滚动） */
+    @media (max-width: 768px) {
+      /* 触发按钮悬浮到右下角，便于触达 */
+      #accessibility-trigger {
+        position: fixed;
+        bottom: calc(16px + env(safe-area-inset-bottom));
+        right: 16px;
+        z-index: 1002;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+      }
+
+      #accessibility-toolbar {
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        max-height: none;
+        padding: 12px 8px calc(12px + env(safe-area-inset-bottom));
+        transform: translateY(100%);
+        transform-origin: bottom center;
+      }
+
+      #accessibility-toolbar.show {
+        transform: translateY(0);
+      }
+
+      .accessibility-toolbar-list {
+        width: 100%;
+        gap: 8px;
+        padding: 0 8px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+
+      .accessibility-toolbar-item .title {
+        font-size: 13px;
+      }
+      .accessibility-toolbar-item .icon {
+        height: 56px;
+        width: 56px;
+      }
+      .accessibility-toolbar-item .icon img {
+        height: 28px;
+        width: 28px;
+      }
+
+      /* 滑块弹层在底部工具栏上方展示，避免被遮挡 */
+      .volume-control,
+      .rate-control {
+        top: auto;
+        bottom: 72px; /* 大致高于图标 */
+      }
+
+      /* 大字幕贴近底部安全区域 */
+      .large-tooltip-display {
+        bottom: calc(20px + env(safe-area-inset-bottom));
+        font-size: 22px;
+        padding: 12px 18px;
+        max-width: 92vw;
+      }
+
+      /* 阅读辅助线在小屏上更明显 */
+      .reading-guide-line.horizontal {
+        height: 3px;
+      }
+      .reading-guide-line.vertical {
+        width: 3px;
+      }
     }

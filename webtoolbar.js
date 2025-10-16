@@ -17,7 +17,8 @@ document.addEventListener('DOMContentLoaded', function () {
       zoomTarget: 'body',        // 只缩放主内容区域
       contrastTarget: 'body',    // 高对比度应用于整个页面
       textOnlyTarget: 'body',    // 只对内容区域应用纯文本模式
-      largeCursorTarget: 'body'  // 大鼠标依然作用于整个页面
+      largeCursorTarget: 'body',  // 大鼠标依然作用于整个页面
+      mainContent: '.menu-container'      // 主内容区域选择器
     }
   });
 
