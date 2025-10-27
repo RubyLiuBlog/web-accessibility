@@ -14,12 +14,12 @@ document.addEventListener('DOMContentLoaded', function () {
       }
     },
     targets: {
-      zoomTarget: 'body',        // 只缩放主内容区域
-      contrastTarget: 'body',    // 高对比度应用于整个页面
-      textOnlyTarget: 'body',    // 只对内容区域应用纯文本模式
-      largeCursorTarget: 'body',  // 大鼠标依然作用于整个页面
-      mainContent: '.menu-container'      // 主内容区域选择器
-    }
+      zoomTarget: '.container',        // 只缩放主内容区域
+      contrastTarget: '.container',    // 高对比度应用于整个页面
+      textOnlyTarget: '.container',    // 只对内容区域应用纯文本模式
+      largeCursorTarget: '.container',  // 大鼠标依然作用于整个页面
+      mainContent: '.container'      // 主内容区域选择器
+    },
   });
 
   // 将插件实例暴露到全局，以便其他脚本使用

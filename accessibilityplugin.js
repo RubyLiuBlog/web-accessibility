@@ -30,7 +30,6 @@ class AccessibilityPlugin {
 				// 缩放控制
 				zoomIn: '#zoom-in',
 				zoomOut: '#zoom-out',
-				zoomReset: '#zoom-reset',
 				zoomLevel: '#zoom-level',
 
 				// 视觉辅助
@@ -46,8 +45,8 @@ class AccessibilityPlugin {
 				largeCursor: '#large-cursor',
 
 				// 语音控制
-				speechToggle: '#speech-toggle',
-				speechMode: '#speech-mode',
+				speechSingle: '#speech-single',
+				speechContinuous: '#speech-continuous',
 				speechVolume: '#speech-volume',
 				speechRate: '#speech-rate',
 
@@ -62,7 +61,8 @@ class AccessibilityPlugin {
 				// 关闭
 				closeToolbar: '#close-toolbar',
 				// 说明
-				description: '#speech-description'
+				description: '#speech-description',
+				resetAll: '#reset'
 			},
 
 			// CSS类名配置
@@ -79,7 +79,7 @@ class AccessibilityPlugin {
 				zoom: 1,
 				speechVolume: 0.7,
 				speechRate: 1,
-				speechMode: 'continuous' // 'continuous' 或 'single'
+				speechMode: 'none' // 'continuous','single', 'none'
 			},
 
 			// 回调函数
@@ -92,13 +92,29 @@ class AccessibilityPlugin {
 
 			// 键盘快捷键配置
 			hotkeys: {
+				// 导航
 				goHome: 'Alt+KeyH',
+				// 工具栏开关
 				toggleToolbar: 'Alt+KeyA',
-				zoomIn: 'Alt+Equal',
-				zoomOut: 'Alt+Minus',
-				resetZoom: 'Alt+Digit0',
-				toggleSpeech: 'Alt+KeyS',
-				toggleHighContrast: 'Alt+KeyC',
+				// 缩放控制
+				zoomIn: 'Alt+Equal',     // Alt + = (放大)
+				zoomOut: 'Alt+Minus',    // Alt + - (缩小)
+				// 语音控制
+				toggleSpeechSingle: 'Alt+KeyS',    // Alt + S 切换语音
+				// 切换语音模式（连读/指读）
+				toggleSpeechContinuous: 'Alt+KeyM', // Alt + M 切换语音模式 (M = Mode)
+				// 视觉辅助
+				toggleHighContrast: 'Alt+KeyC', // Alt + C 切换高对比度
+				toggleTextOnly: 'Alt+KeyT',     // Alt + T 切换纯文本模式
+				// 辅助线与大字幕/大鼠标
+				toggleReadingGuide: 'Alt+KeyR',  // Alt + R 切换阅读辅助线
+				toggleLargeTooltip: 'Alt+KeyL',  // Alt + L 切换大字幕
+				toggleLargeCursor: 'Alt+KeyU',   // Alt + U 切换大鼠标 (U = cUrSor)
+				resetAll: 'Alt+Digit0', // Alt + 0 (重置)
+				// 导航历史
+				navBack: 'Alt+BracketLeft',   // Alt + [ 后退
+				navForward: 'Alt+BracketRight',// Alt + ] 前进
+				// 停止语音
 				stopSpeech: 'Escape'
 			},
 
@@ -115,7 +131,8 @@ class AccessibilityPlugin {
 				contrastTarget: 'body',    // 高对比度模式的目标元素选择器
 				textOnlyTarget: 'body',    // 纯文本模式的目标元素选择器
 				largeCursorTarget: 'body'  // 大鼠标模式的目标元素选择器
-			}
+			},
+			helpPath: 'help.html',
 		};
 
 		// 合并用户配置
@@ -125,7 +142,6 @@ class AccessibilityPlugin {
 		this.state = {
 			isInitialized: false,
 			currentZoom: this.config.defaults.zoom,
-			speechEnabled: false,
 			speechMode: this.config.defaults.speechMode,
 			speechVolume: this.config.defaults.speechVolume,
 			speechRate: this.config.defaults.speechRate,
@@ -247,7 +263,6 @@ class AccessibilityPlugin {
 		// 缩放控制
 		this.addEventListenerSafe(this.elements.zoomIn, 'click', () => this.zoomIn());
 		this.addEventListenerSafe(this.elements.zoomOut, 'click', () => this.zoomOut());
-		this.addEventListenerSafe(this.elements.zoomReset, 'click', () => this.resetZoom());
 
 		// 视觉辅助
 		this.addEventListenerSafe(this.elements.highContrast, 'click', () => this.toggleHighContrast());
@@ -259,8 +274,8 @@ class AccessibilityPlugin {
 		this.addEventListenerSafe(this.elements.largeCursor, 'click', () => this.toggleLargeCursor());
 
 		// 语音控制
-		this.addEventListenerSafe(this.elements.speechToggle, 'click', () => this.toggleSpeech());
-		this.addEventListenerSafe(this.elements.speechMode, 'click', () => this.toggleSpeechMode());
+		this.addEventListenerSafe(this.elements.speechSingle, 'click', () => this.toggleSpeechSingle());
+		this.addEventListenerSafe(this.elements.speechContinuous, 'click', () => this.toggleSpeechContinuous());
 
 		// 音量和语速控制
 		this.setupVolumeControl();
@@ -271,7 +286,7 @@ class AccessibilityPlugin {
 		this.addEventListenerSafe(descriptionBtn, 'click', () => this.showDescription());
 
 		// 重置功能
-		this.addEventListenerSafe(this.elements.zoomReset, 'click', () => this.handleResetAll());
+		this.addEventListenerSafe(this.elements.resetAll, 'click', () => this.handleResetAll());
 
 		// 导航
 		this.addEventListenerSafe(this.elements.navBack, 'click', () => this.navigateBack());
@@ -295,10 +310,10 @@ class AccessibilityPlugin {
 			const t = e.touches && e.touches[0];
 			if (!t) return;
 			if (this.elements.readingGuideLineHorizontal) {
-				this.elements.readingGuideLineHorizontal.style.top = t.clientY / this.state.currentZoom + 'px';
+				this.elements.readingGuideLineHorizontal.style.top = `${t.clientY}px`;
 			}
 			if (this.elements.readingGuideLineVertical) {
-				this.elements.readingGuideLineVertical.style.left = t.clientX / this.state.currentZoom + 'px';
+				this.elements.readingGuideLineVertical.style.left = `${t.clientX}px`;
 			}
 		}, { passive: true });
 
@@ -409,8 +424,8 @@ class AccessibilityPlugin {
 			'readingGuide': 'reading-guide',
 			'largeTooltip': 'large-tooltip',
 			'largeCursor': 'large-cursor',
-			'speech': 'speech-toggle',
-			'speechMode': 'speech-mode'
+			'speechSingle': 'speech-single',
+			'speechContinuous': 'speech-continuous'
 		};
 
 		const elementId = featureMap[feature];
@@ -467,8 +482,8 @@ class AccessibilityPlugin {
 		if (this.state.largeCursorEnabled) {
 			this.toggleLargeCursor();
 		}
-		if (this.state.speechEnabled && !document.body.classList.contains('touch-device')) {
-			this.toggleSpeech();
+		if (this.state.speechMode !== 'none' && !document.body.classList.contains('touch-device')) {
+			this.toggleSpeechMode('none');
 		}
 
 		// 重置滑块
@@ -478,12 +493,11 @@ class AccessibilityPlugin {
 		if (rateSlider) rateSlider.value = 1;
 		this.setSpeechVolume(0.7);
 		this.setSpeechRate(1);
-
-		const resetBtn = document.getElementById('zoom-reset');
-		if (resetBtn) {
-			resetBtn.classList.add('active');
+		if (this.elements.resetAll) {
+			this.elements.resetAll.classList.add('active');
 			setTimeout(() => {
-				resetBtn.classList.remove('active');
+				this.elements.resetAll.classList.remove('active');
+				this.speak('已重置所有无障碍功能');
 			}, 1000);
 		}
 	}
@@ -492,25 +506,7 @@ class AccessibilityPlugin {
 	 * 显示使用说明
 	 */
 	showDescription() {
-		const description = `
-            无障碍工具栏使用说明：
-            - 放大/缩小：调整页面缩放比例
-            - 对比色：切换高对比度模式，便于视觉障碍用户
-            - 鼠标：启用大鼠标光标
-            - 辅助线：显示阅读辅助线，跟随鼠标移动
-            - 纯文本：移除所有装饰性样式，只保留基本文本格式
-            - 大字幕：显示鼠标悬停元素的大字幕提示
-            - 声音：调整语音朗读音量
-            - 指读：启用点击朗读功能
-            - 连读：切换连续朗读模式
-            - 语速：调整语音朗读速度
-            - 重置：恢复所有设置到默认状态
-            - 关闭：隐藏工具栏
-            
-            快捷键：Alt+A 显示/隐藏工具栏
-        `;
-
-		this.speak(description);
+		window.open(window.location.origin + this.config.helpPath, "_blank")
 		const descBtn = document.getElementById('speech-description');
 		if (descBtn) {
 			descBtn.classList.add('active');
@@ -536,46 +532,50 @@ class AccessibilityPlugin {
 	setupKeyboardNavigation() {
 		this.addEventListenerSafe(document, 'keydown', (e) => {
 			const key = e.code;
-			const hotkeys = this.config.hotkeys;
-
-			// 检查快捷键
+			const hotkeys = this.config.hotkeys || {};
+			const codeFromHotkey = (hk) => {
+				if (!hk || typeof hk !== 'string') return null;
+				const parts = hk.split('+');
+				return parts.length > 1 ? parts[1] : parts[0];
+			};
 			if (e.altKey) {
-				switch (key) {
-					case hotkeys.goHome.split('+')[1]:
+				const mapping = {
+					goHome: () => this.goHome(),
+					toggleToolbar: () => this.toggleToolbar(),
+					zoomIn: () => this.zoomIn(),
+					zoomOut: () => this.zoomOut(),
+					resetAll: () => this.handleResetAll(),
+					toggleSpeechSingle: () => this.toggleSpeechSingle(),
+					toggleSpeechContinuous: () => this.toggleSpeechContinuous(),
+					toggleHighContrast: () => this.toggleHighContrast(),
+					toggleTextOnly: () => this.toggleTextOnly(),
+					toggleReadingGuide: () => this.toggleReadingGuide(),
+					toggleLargeTooltip: () => this.toggleLargeTooltip(),
+					toggleLargeCursor: () => this.toggleLargeCursor(),
+					navBack: () => this.navigateBack(),
+					navForward: () => this.navigateForward(),
+				};
+
+				for (const cfgKey in mapping) {
+					const hk = hotkeys[cfgKey];
+					const code = codeFromHotkey(hk);
+					if (code && code === key) {
 						e.preventDefault();
-						this.goHome();
+						try {
+							mapping[cfgKey]();
+						} catch (err) {
+							console.error('快捷键捕获错误', cfgKey, err);
+						}
 						break;
-					case hotkeys.toggleToolbar.split('+')[1]:
-						e.preventDefault();
-						this.toggleToolbar();
-						break;
-					case hotkeys.zoomIn.split('+')[1]:
-						e.preventDefault();
-						this.zoomIn();
-						break;
-					case hotkeys.zoomOut.split('+')[1]:
-						e.preventDefault();
-						this.zoomOut();
-						break;
-					case hotkeys.resetZoom.split('+')[1]:
-						e.preventDefault();
-						this.resetZoom();
-						break;
-					case hotkeys.toggleSpeech.split('+')[1]:
-						e.preventDefault();
-						this.toggleSpeech();
-						break;
-					case hotkeys.toggleHighContrast.split('+')[1]:
-						e.preventDefault();
-						this.toggleHighContrast();
-						break;
+					}
 				}
 			}
-
-			// ESC键停止语音
-			if (key === hotkeys.stopSpeech && this.state.isReading) {
-				e.preventDefault();
-				this.stopSpeech();
+			// ESC键停止语音 (stopSpeech may be 'Escape' or similar)
+			if (hotkeys.stopSpeech && key === hotkeys.stopSpeech) {
+				if (this.state.isReading) {
+					e.preventDefault();
+					this.stopSpeech();
+				}
 			}
 		});
 	}
@@ -659,7 +659,7 @@ class AccessibilityPlugin {
 	 * 返回首页
 	*/
 	goHome() {
-		window.location.href = window.location.origin;
+		window.location.href = window.location.origin + window.location.pathname;
 		this.speak('返回首页');
 	}
 
@@ -668,13 +668,13 @@ class AccessibilityPlugin {
 	 */
 	zoomIn() {
 		this.state.currentZoom = Math.min(this.state.currentZoom + 0.1, 3);
-		this.applyZoom();
+		this.applyZoom('放大');
 		this.saveState();
 	}
 
 	zoomOut() {
 		this.state.currentZoom = Math.max(this.state.currentZoom - 0.1, 0.5);
-		this.applyZoom();
+		this.applyZoom('缩小');
 		this.saveState();
 	}
 
@@ -684,13 +684,13 @@ class AccessibilityPlugin {
 		this.saveState();
 	}
 
-	applyZoom() {
+	applyZoom(zoomtext) {
 		const zoomTarget = this.targetElements.zoomTarget || document.body;
 
 		zoomTarget.style.transform = `scale(${this.state.currentZoom})`;
 		zoomTarget.style.transformOrigin = 'top left';
-		zoomTarget.style.width = `${100 / this.state.currentZoom}%`;
-		zoomTarget.style.height = `${100 / this.state.currentZoom}%`;
+		zoomTarget.style.width = this.state.currentZoom > 1 ? '100%' : `${100 / this.state.currentZoom}%`;
+		zoomTarget.style.height = `100vh`;
 
 		// 更新显示
 		if (this.elements.zoomLevel) {
@@ -717,7 +717,17 @@ class AccessibilityPlugin {
 		}
 
 		this.triggerCallback('onZoomChange', { zoom: this.state.currentZoom });
-		this.speak(`页面缩放${Math.round(this.state.currentZoom * 100)}%`);
+		if (this.state.currentZoom === 3) {
+			this.speak(`页面已放到最大`);
+			return;
+		}
+		if (this.state.currentZoom === 0.5) {
+			this.speak(`页面已缩小至最小`);
+			return;
+		}
+		if (zoomtext) {
+			this.speak(`页面${zoomtext}至${Math.round(this.state.currentZoom * 100)}%`);
+		}
 	}
 
 	/**
@@ -856,10 +866,10 @@ class AccessibilityPlugin {
 	handleMouseMove(e) {
 		if (this.state.readingGuideEnabled) {
 			if (this.elements.readingGuideLineHorizontal) {
-				this.elements.readingGuideLineHorizontal.style.top = e.clientY / this.state.currentZoom + 'px';
+				this.elements.readingGuideLineHorizontal.style.top = `${e.clientY}px`;
 			}
 			if (this.elements.readingGuideLineVertical) {
-				this.elements.readingGuideLineVertical.style.left = e.clientX / this.state.currentZoom + 'px';
+				this.elements.readingGuideLineVertical.style.left = `${e.clientX}px`;
 			}
 		}
 	}
@@ -874,11 +884,46 @@ class AccessibilityPlugin {
 					content.textContent = description;
 				}
 				this.elements.largeTooltipDisplay.style.display = 'block';
+			} else {
+				// 如果没有描述内容，隐藏大字幕
+				this.elements.largeTooltipDisplay.style.display = 'none';
 			}
 		}
 
+		// 连读功能 - 悬停时开始阅读
+		if (this.state.speechMode === 'continuous') {
+			const target = e.target;
+			
+			// 避免对工具栏元素响应
+			if (target.closest('.accessibility-toolbar') || target.closest('#accessibility-trigger')) {
+				return;
+			}
+	
+			// 避免重复播报同一个元素
+			if (this.state.lastHoveredElement === target) {
+				return;
+			}
+	
+			// 清除之前的防抖计时器
+			if (this.state.hoverDebounceTimer) {
+				clearTimeout(this.state.hoverDebounceTimer);
+			}
+	
+			// 设置防抖，延迟500ms开始连读（比指读模式稍长，避免过于敏感）
+			this.state.hoverDebounceTimer = setTimeout(() => {
+				// 如果已经在阅读，先停止
+				if (this.state.isReading) {
+					this.stopSpeech();
+				}
+				
+				// 从当前悬停位置开始阅读
+				this.startContinuousReadingFrom(target);
+				this.state.lastHoveredElement = target;
+			}, 500);
+		}
+
 		// 指读功能 - 悬浮时播报
-		if (this.state.speechEnabled) {
+		if (this.state.speechMode === 'single') {
 			const target = e.target;
 			// 避免对工具栏元素播报
 			if (target.closest('.accessibility-toolbar') || target.closest('#accessibility-trigger')) {
@@ -910,11 +955,16 @@ class AccessibilityPlugin {
 		if (this.state.largeTooltipEnabled && this.elements.largeTooltipDisplay) {
 			this.elements.largeTooltipDisplay.style.display = 'none';
 		}
-
-		// 清理指读功能的状态
-		if (this.state.speechEnabled) {
+	
+		// 清理连读和指读功能的状态
+		if (this.state.speechMode !== 'none') {
 			// 重置上次悬浮的元素
 			this.state.lastHoveredElement = null;
+			
+			// 清除防抖计时器
+			if (this.state.hoverDebounceTimer) {
+				clearTimeout(this.state.hoverDebounceTimer);
+			}
 		}
 	}
 
@@ -939,29 +989,37 @@ class AccessibilityPlugin {
 		if (this.targetElements.mainContent && element === this.targetElements.mainContent) {
 			return '';
 		}
-
-		let text = '';
-
-		if (element.alt) {
-			text = element.alt;
-		} else if (element.title) {
-			text = element.title;
-		} else if (element.textContent && element.textContent.trim()) {
-			text = element.textContent.trim().substring(0, 100);
-		} else if (element.tagName) {
-			const tagNames = {
-				'A': '链接',
-				'BUTTON': '按钮',
-				'INPUT': '输入框',
-				'IMG': '图片',
-				'VIDEO': '视频',
-				'AUDIO': '音频',
-				'DIV': '容器',
-				'SELECT': '下拉框',
-			};
-			text = tagNames[element.tagName] || element.tagName.toLowerCase();
+	
+		// 检查元素是否包含子元素，如果是容器元素则跳过
+		if (this.shouldSkipElement(element)) {
+			return '';
 		}
-
+	
+		let text = '';
+	
+		// 获取元素自身的文本内容（不包括子元素）
+		text = this.getDirectTextContent(element);
+	
+		// 如果没有通过直接文本获取到内容，再尝试其他属性
+		if (!text) {
+			if (element.alt) {
+				text = element.alt;
+			} else if (element.title) {
+				text = element.title;
+			} else if (element.tagName) {
+				const tagNames = {
+					'A': '链接',
+					'BUTTON': '按钮',
+					'INPUT': '输入框',
+					'IMG': '图片',
+					'VIDEO': '视频',
+					'AUDIO': '音频',
+					'SELECT': '下拉框',
+				};
+				text = tagNames[element.tagName] || element.tagName.toLowerCase();
+			}
+		}
+	
 		return text;
 	}
 
@@ -970,7 +1028,12 @@ class AccessibilityPlugin {
 	 */
 	getElementDescriptionWithType(element) {
 		if (!element || element === document.body) return '';
-
+	
+		// 检查元素是否包含子元素，如果是容器元素则跳过阅读
+		if (this.shouldSkipElement(element)) {
+			return '';
+		}
+	
 		let text = '';
 		let typePrefix = '';
 
@@ -996,67 +1059,144 @@ class AccessibilityPlugin {
 			typePrefix = '文本区域：';
 		} else if (element.tagName === 'IMG') {
 			typePrefix = '图片：';
-		}
-
-		// 获取元素文本内容
-		if (element.alt) {
-			text = element.alt;
-		} else if (element.title) {
-			text = element.title;
-		} else if (element.textContent && element.textContent.trim()) {
-			text = element.textContent.trim().substring(0, 100);
-		} else if (element.tagName === 'IMG') {
-			text = '无描述图片';
-		} else if (element.placeholder) {
-			text = element.placeholder;
-		} else if (element.value && element.value.trim()) {
-			text = element.value.trim().substring(0, 50);
-		}
-
+		} 
+	
+		// 获取元素自身的文本内容（不包括子元素）
+		text = this.getDirectTextContent(element);
+	
 		// 如果没有有效文本内容，返回空字符串
 		if (!text) {
 			return '';
 		}
-
+	
 		return typePrefix + text;
+	}
+	
+	/**
+	 * 判断是否应该跳过该元素的阅读/显示
+	 */
+	shouldSkipElement(element) {
+		// 常见的容器元素标签
+		const containerTags = ['DIV', 'SECTION', 'ARTICLE', 'MAIN', 'HEADER', 'FOOTER', 'ASIDE', 'NAV', 
+							'UL', 'OL', 'TABLE', 'FORM', 'FIELDSET', 'DETAILS'];
+		
+		// 如果元素是容器标签且包含子元素，则跳过
+		if (containerTags.includes(element.tagName)) {
+			// 检查是否包含有意义的子元素
+			const meaningfulChildren = Array.from(element.children).filter(child => {
+				// 检查子元素是否有文本内容或是有意义的交互元素
+				const childText = this.getDirectTextContent(child);
+				const isInteractive = ['A', 'BUTTON', 'INPUT', 'SELECT', 'TEXTAREA'].includes(child.tagName);
+				return (childText && childText.trim().length > 0) || isInteractive;
+			});
+			
+			// 如果有有意义的子元素，则跳过当前元素
+			if (meaningfulChildren.length > 0) {
+				return true;
+			}
+		}
+		
+		// 如果元素本身没有内容但包含子元素，也跳过
+		const directText = this.getDirectTextContent(element);
+		if (!directText && element.children.length > 0) {
+			return true;
+		}
+		
+		return false;
 	}
 
 	/**
-	 * 语音功能
+	 * 获取元素的直接文本内容（不包括子元素的文本）
 	 */
-	toggleSpeech(force) {
-		const enabled = (typeof force === 'boolean') ? !!force : !this.state.speechEnabled;
-		this.state.speechEnabled = enabled;
-
-		if (this.state.speechEnabled) {
-			this.elements.speechToggle?.classList.add(this.config.classes.active);
+	getDirectTextContent(element) {
+		let text = '';
+		
+		// 优先使用无障碍属性
+		if (element.alt) {
+			text = element.alt;
+		} else if (element.title) {
+			text = element.title;
+		} else if (element.placeholder) {
+			text = element.placeholder;
+		} else if (element.value && element.value.trim()) {
+			text = element.value.trim();
 		} else {
-			this.elements.speechToggle?.classList.remove(this.config.classes.active);
-			this.stopSpeech();
+			// 获取直接文本节点内容
+			const directTextNodes = Array.from(element.childNodes).filter(node => 
+				node.nodeType === Node.TEXT_NODE && node.textContent.trim()
+			);
+			
+			if (directTextNodes.length > 0) {
+				text = directTextNodes.map(node => node.textContent.trim()).join(' ').substring(0, 100);
+			}
 		}
-
-		this.speak('语音朗读' + (this.state.speechEnabled ? '已开启' : '已关闭'));
-		this.updateToolbarItemState('speech', this.state.speechEnabled);
-		this.triggerCallback('onSpeechToggle', { enabled: this.state.speechEnabled });
-		this.saveState();
+		
+		return text ? text.trim() : '';
 	}
 
 	toggleSpeechMode(force) {
-		// force can be 'continuous' or 'single' or boolean true/false (true = continuous)
-		if (typeof force === 'string') {
-			this.state.speechMode = (force === 'continuous') ? 'continuous' : 'single';
-		} else if (typeof force === 'boolean') {
-			this.state.speechMode = force ? 'continuous' : 'single';
+		if (force !== 'none') {
+			if (force === 'single') {
+				this.speak('切换到指读模式');
+				this.elements.speechSingle.classList.add(this.config.classes.active);
+				this.elements.speechContinuous.classList.remove(this.config.classes.active);
+			} else {
+				this.speak('切换到连读模式，点击页面任意位置开始阅读');
+				this.elements.speechContinuous.classList.add(this.config.classes.active);
+				this.elements.speechSingle.classList.remove(this.config.classes.active);
+			}
 		} else {
-			this.state.speechMode = this.state.speechMode === 'continuous' ? 'single' : 'continuous';
+			this.state.speechMode = 'none';
+			this.speak('语音阅读已关闭');
+			this.elements.speechSingle.classList.remove(this.config.classes.active);
+			this.elements.speechContinuous.classList.remove(this.config.classes.active);
 		}
-		const modeText = this.state.speechMode === 'continuous' ? '连读' : '单读';
-		this.speak(`切换到${modeText}模式`);
-
-		this.updateToolbarItemState('speechMode', this.state.speechMode === 'continuous');
+		this.updateToolbarItemState('speechMode', this.state.speechMode);
 		this.triggerCallback('onFeatureToggle', {
 			feature: 'speechMode',
-			enabled: this.state.speechMode === 'continuous'
+			state: this.state.speechMode
+		});
+		this.saveState();
+	}
+
+	toggleSpeechSingle() {
+		if (this.state.speechMode === 'single') {
+			this.state.speechMode = 'none';
+			this.speak('语音指读已关闭');
+			this.elements.speechSingle.classList.remove(this.config.classes.active);
+		} else {
+			this.state.speechMode = 'single';
+			this.speak('切换到指读模式');
+			this.elements.speechSingle.classList.add(this.config.classes.active);
+			this.elements.speechContinuous.classList.remove(this.config.classes.active);
+		}
+		this.updateToolbarItemState('speechMode', this.state.speechMode);
+		this.triggerCallback('onFeatureToggle', {
+			feature: 'speechMode',
+			state: this.state.speechMode
+		});
+		this.saveState();
+	}
+
+	toggleSpeechContinuous() {
+		if (this.state.speechMode === 'continuous') {
+			// 如果已经是连读模式，则关闭
+			this.state.speechMode = 'none';
+			this.stopSpeech(); // 停止当前阅读
+			this.speak('语音连读已关闭');
+			this.elements.speechContinuous?.classList.remove(this.config.classes.active);
+		} else {
+			// 切换到连读模式
+			this.state.speechMode = 'continuous';
+			this.speak('切换到连读模式，鼠标悬停在内容区域开始阅读');
+			this.elements.speechContinuous?.classList.add(this.config.classes.active);
+			this.elements.speechSingle?.classList.remove(this.config.classes.active);
+		}
+		
+		this.updateToolbarItemState('speechContinuous', this.state.speechMode === 'continuous');
+		this.triggerCallback('onFeatureToggle', {
+			feature: 'speechMode',
+			state: this.state.speechMode
 		});
 		this.saveState();
 	}
@@ -1072,22 +1212,25 @@ class AccessibilityPlugin {
 	}
 
 	handleClick(e) {
-		if (!this.state.speechEnabled) return;
-
+		if (this.state.speechMode === 'none') return;
+	
 		// 避免对工具栏元素响应
 		const target = e.target;
 		if (target.closest('.accessibility-toolbar') || target.closest('#accessibility-trigger')) {
 			return;
 		}
-
-		// 连读模式下，点击任意位置开始读取页面内容
-		if (this.state.speechMode === 'continuous' && !this.state.isReading) {
-			this.readPageContent();
+	
+		// 连读模式下，点击任意位置停止阅读
+		if (this.state.speechMode === 'continuous' && this.state.isReading) {
+			this.stopSpeech();
+			this.speak('已停止阅读');
 		}
+		
+		// 指读模式下，点击不影响（保持原有的悬停阅读）
 	}
 
 	readPageContent() {
-		if (!this.state.speechEnabled || this.state.isReading) return;
+		if (this.state.speechMode === 'none' || this.state.isReading) return;
 
 		this.state.isReading = true;
 		const content = this.extractPageContent();
@@ -1127,6 +1270,138 @@ class AccessibilityPlugin {
 		return content.trim();
 	}
 
+	// 新增方法：从指定元素开始连读
+	startContinuousReadingFrom(startElement) {
+		if (this.state.speechMode !== 'continuous' || this.state.isReading) return;
+
+		this.state.isReading = true;
+		const content = this.extractContentFromElement(startElement);
+		
+		if (!content) {
+			this.speak('没有找到可阅读的内容');
+			this.state.isReading = false;
+			return;
+		}
+		
+		this.speak(content, () => {
+			this.state.isReading = false;
+			// 阅读完成后可以添加提示
+			this.speak('内容阅读完毕');
+		});
+	}
+
+	// 新增方法：从指定元素开始提取内容
+	extractContentFromElement(startElement) {
+		// 找到包含主要内容的最接近的容器
+		let contentContainer = this.findContentContainer(startElement);
+		
+		if (!contentContainer) {
+			contentContainer = document.body;
+		}
+		
+		// 创建文档片段来提取文本，从开始元素之后的内容
+		const walker = document.createTreeWalker(
+			contentContainer,
+			NodeFilter.SHOW_TEXT,
+			{
+				acceptNode: (node) => {
+					// 跳过脚本、样式和无障碍工具栏
+					const parent = node.parentNode;
+					if (parent.tagName === 'SCRIPT' || 
+						parent.tagName === 'STYLE' || 
+						parent.tagName === 'NOSCRIPT' ||
+						parent.closest('.accessibility-toolbar') ||
+						parent.closest('#accessibility-trigger')) {
+						return NodeFilter.FILTER_REJECT;
+					}
+					
+					// 跳过空白文本节点
+					if (!node.textContent.trim()) {
+						return NodeFilter.FILTER_REJECT;
+					}
+					
+					// 跳过隐藏元素
+					if (parent.offsetParent === null || 
+						parent.style.display === 'none' || 
+						parent.style.visibility === 'hidden' ||
+						window.getComputedStyle(parent).display === 'none') {
+						return NodeFilter.FILTER_REJECT;
+					}
+					
+					// 检查节点是否在开始元素之后（按文档顺序）
+					if (!this.isNodeAfterStartElement(node, startElement)) {
+						return NodeFilter.FILTER_REJECT;
+					}
+					
+					return NodeFilter.FILTER_ACCEPT;
+				}
+			}
+		);
+
+		let content = '';
+		let node;
+		const seenTexts = new Set(); // 避免重复内容
+		
+		while (node = walker.nextNode()) {
+			const text = node.textContent.trim();
+			
+			// 避免重复的文本内容
+			if (text && !seenTexts.has(text) && text.length > 1) {
+				// 添加适当的标点分隔
+				if (content && !content.endsWith('.') && !content.endsWith('!') && !content.endsWith('?')) {
+					content += '。';
+				}
+				content += text + ' ';
+				seenTexts.add(text);
+				
+				// 限制内容长度，避免过长的阅读
+				if (content.length > 5000) {
+					content += '...（内容过长，已截断）';
+					break;
+				}
+			}
+		}
+
+		return content.trim();
+	}
+
+	// 新增方法：查找内容容器
+	findContentContainer(element) {
+		// 常见的内容容器标签
+		const containerTags = ['ARTICLE', 'SECTION', 'MAIN', 'DIV', 'P', 'LI', 'BLOCKQUOTE'];
+		
+		let current = element;
+		while (current && current !== document.body) {
+			if (containerTags.includes(current.tagName) && 
+				this.hasSubstantialContent(current)) {
+				return current;
+			}
+			current = current.parentElement;
+		}
+		
+		return document.body;
+	}
+
+	// 新增方法：检查元素是否有实质性内容
+	hasSubstantialContent(element) {
+		const text = element.textContent || '';
+		return text.trim().length > 20; // 至少有20个字符
+	}
+
+	// 新增方法：检查节点是否在开始元素之后
+	isNodeAfterStartElement(node, startElement) {
+		// 简单的文档位置比较
+		const nodeRange = document.createRange();
+		nodeRange.selectNode(node);
+		
+		const startRange = document.createRange();
+		startRange.selectNode(startElement);
+		
+		// 比较两个范围的位置
+		const comparison = nodeRange.compareBoundaryPoints(Range.START_TO_START, startRange);
+		
+		return comparison >= 0; // 0表示相同节点，>0表示在之后
+	}
 	speak(text, onEnd = null) {
 		if (!this.speechSynthesis) {
 			console.warn('语音合成不可用');
@@ -1162,6 +1437,13 @@ class AccessibilityPlugin {
 			this.speechSynthesis.cancel();
 		}
 		this.state.isReading = false;
+		this.state.lastHoveredElement = null;
+		
+		// 清除可能存在的防抖计时器
+		if (this.state.hoverDebounceTimer) {
+			clearTimeout(this.state.hoverDebounceTimer);
+			this.state.hoverDebounceTimer = null;
+		}
 	}
 
 	/**
@@ -1195,22 +1477,22 @@ class AccessibilityPlugin {
 
 	saveState() {
 		try {
-			localStorage.setItem('accessibility-plugin-state', JSON.stringify(this.state));
+			sessionStorage.setItem('accessibility-plugin-state', JSON.stringify(this.state));
 		} catch (error) {
-			console.warn('无法保存状态到localStorage:', error);
+			console.warn('无法保存状态到sessionStorage:', error);
 		}
 	}
 
 	restoreState() {
 		try {
-			const savedState = localStorage.getItem('accessibility-plugin-state');
+			const savedState = sessionStorage.getItem('accessibility-plugin-state');
 			if (savedState) {
 				const parsedState = JSON.parse(savedState);
 				Object.assign(this.state, parsedState);
 				this.applyRestoredState();
 			}
 		} catch (error) {
-			console.warn('无法从localStorage恢复状态:', error);
+			console.warn('无法从sessionStorage恢复状态:', error);
 		}
 	}
 
@@ -1224,8 +1506,8 @@ class AccessibilityPlugin {
 		// 在恢复期间静默 speak 与 saveState，避免语音提示和重复写入
 		const origSpeak = this.speak;
 		const origSave = this.saveState;
-		this.speak = function(){};
-		this.saveState = function(){};
+		this.speak = function () { };
+		this.saveState = function () { };
 		try {
 			// 使用 force 参数恢复各个开关，避免基于toggle的翻转副作用
 			this.toggleHighContrast(!!this.state.highContrastEnabled);
@@ -1233,7 +1515,7 @@ class AccessibilityPlugin {
 			this.toggleLargeCursor(!!this.state.largeCursorEnabled);
 			this.toggleLargeTooltip(!!this.state.largeTooltipEnabled);
 			this.toggleReadingGuide(!!this.state.readingGuideEnabled);
-			this.toggleSpeech(!!this.state.speechEnabled);
+			this.toggleSpeechMode(this.state.speechMode);
 		} finally {
 			// 恢复 speak 与 saveState 实现
 			this.speak = origSpeak;
@@ -1319,9 +1601,6 @@ class AccessibilityPlugin {
 			case 'largeCursor':
 				if (!this.state.largeCursorEnabled) this.toggleLargeCursor(true);
 				break;
-			case 'speech':
-				if (!this.state.speechEnabled) this.toggleSpeech(true);
-				break;
 		}
 	}
 
@@ -1341,9 +1620,6 @@ class AccessibilityPlugin {
 				break;
 			case 'largeCursor':
 				if (this.state.largeCursorEnabled) this.toggleLargeCursor(false);
-				break;
-			case 'speech':
-				if (this.state.speechEnabled) this.toggleSpeech(false);
 				break;
 		}
 	}

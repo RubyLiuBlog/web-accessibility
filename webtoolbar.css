@@ -121,7 +121,8 @@
 
     /* 大字幕样式 */
     .large-tooltip-display {
-      position: absolute;
+      position: fixed;
+      bottom: 20px;
       bottom: 20px;
       left: 50%;
       transform: translateX(-50%);
@@ -140,31 +141,31 @@
     }
 
     /* 高对比度模式 */
-    body.high-contrast {
+    .container.high-contrast {
       background: #000 !important;
       color: #fff !important;
     }
 
-    body.high-contrast *:not(.accessibility-toolbar):not(.accessibility-toolbar *) {
+    .container.high-contrast *:not(.accessibility-toolbar):not(.accessibility-toolbar *) {
       background: #000 !important;
       color: #fff !important;
       border-color: #fff !important;
     }
 
     /* 保持工具栏原有样式不变 */
-    body.high-contrast .accessibility-toolbar,
-    body.high-contrast .accessibility-toolbar * {
+    .container.high-contrast .accessibility-toolbar,
+    .container.high-contrast .accessibility-toolbar * {
       background: initial !important;
       color: initial !important;
     }
 
-    body.high-contrast #accessibility-trigger {
+    .container.high-contrast #accessibility-trigger {
       background: #007bff !important;
       color: white !important;
     }
 
     /* 纯文本模式 */
-    body.text-only {
+    .container.text-only {
       background: #fff !important;
       font-family: serif !important;
       font-size: 16px !important;
@@ -172,7 +173,7 @@
       color: #000 !important;
     }
 
-    body.text-only *:not(.accessibility-toolbar):not(.accessibility-toolbar *) {
+    .container.text-only *:not(.accessibility-toolbar):not(.accessibility-toolbar *) {
       background: transparent !important;
       border: none !important;
       border-radius: 0 !important;
@@ -182,9 +183,8 @@
       font-size: inherit !important;
       font-weight: normal !important;
       font-style: normal !important;
-      text-decoration: none !important;
       color: inherit !important;
-      margin: 0.5em 0 !important;
+      margin: 0.5em 0.5em !important;
       padding: 0 !important;
       float: none !important;
       position: static !important;
@@ -211,109 +211,109 @@
     }
 
     /* 隐藏媒体和装饰性元素 */
-    body.text-only img,
-    body.text-only video,
-    body.text-only canvas,
-    body.text-only svg,
-    body.text-only iframe,
-    body.text-only object,
-    body.text-only embed,
-    body.text-only audio {
+    .container.text-only img,
+    .container.text-only video,
+    .container.text-only canvas,
+    .container.text-only svg,
+    .container.text-only iframe,
+    .container.text-only object,
+    .container.text-only embed,
+    .container.text-only audio {
       display: none !important;
     }
 
     /* 保持基本的文本结构 */
-    body.text-only h1,
-    body.text-only h2,
-    body.text-only h3,
-    body.text-only h4,
-    body.text-only h5,
-    body.text-only h6 {
+    .container.text-only h1,
+    .container.text-only h2,
+    .container.text-only h3,
+    .container.text-only h4,
+    .container.text-only h5,
+    .container.text-only h6 {
       font-weight: bold !important;
       font-size: 1.2em !important;
       margin: 1em 0 0.5em 0 !important;
       display: block !important;
     }
 
-    body.text-only h1 { font-size: 1.8em !important; }
-    body.text-only h2 { font-size: 1.6em !important; }
-    body.text-only h3 { font-size: 1.4em !important; }
+    .container.text-only h1 { font-size: 1.8em !important; }
+    .container.text-only h2 { font-size: 1.6em !important; }
+    .container.text-only h3 { font-size: 1.4em !important; }
 
-    body.text-only p {
+    .container.text-only p {
       display: block !important;
       margin: 0.5em 0 !important;
     }
 
-    body.text-only ul,
-    body.text-only ol {
+    .container.text-only ul,
+    .container.text-only ol {
       display: block !important;
       margin: 0.5em 0 !important;
       padding-left: 2em !important;
     }
 
-    body.text-only li {
+    .container.text-only li {
       display: list-item !important;
       margin: 0.2em 0 !important;
     }
 
-    body.text-only ul li {
+    .container.text-only ul li {
       list-style-type: disc !important;
     }
 
-    body.text-only ol li {
+    .container.text-only ol li {
       list-style-type: decimal !important;
     }
 
-    body.text-only a {
+    .container.text-only a {
       text-decoration: underline !important;
       color: #0000EE !important;
     }
 
-    body.text-only strong,
-    body.text-only b {
+    .container.text-only strong,
+    .container.text-only b {
       font-weight: bold !important;
     }
 
-    body.text-only em,
-    body.text-only i {
+    .container.text-only em,
+    .container.text-only i {
       font-style: italic !important;
     }
 
-    body.text-only blockquote {
+    .container.text-only blockquote {
       margin: 1em 2em !important;
       font-style: italic !important;
     }
 
-    body.text-only pre,
-    body.text-only code {
+    .container.text-only pre,
+    .container.text-only code {
       font-family: monospace !important;
       background: #f5f5f5 !important;
       padding: 0.2em !important;
     }
 
-    body.text-only table {
+    .container.text-only table {
       border-collapse: collapse !important;
       margin: 1em 0 !important;
     }
 
-    body.text-only td,
-    body.text-only th {
+    .container.text-only td,
+    .container.text-only th {
       border: 1px solid #000 !important;
       padding: 0.5em !important;
       text-align: left !important;
     }
 
-    body.text-only th {
+    .container.text-only th {
       font-weight: bold !important;
     }
 
     /* 保持工具栏原有样式不变 */
-    body.text-only .accessibility-toolbar,
-    body.text-only .accessibility-toolbar * {
+    .container.text-only .accessibility-toolbar,
+    .container.text-only .accessibility-toolbar * {
       all: revert !important;
     }
 
-    body.text-only #accessibility-trigger {
+    .container.text-only #accessibility-trigger {
       background: #007bff !important;
       color: white !important;
       border: 1px solid #007bff !important;
@@ -322,7 +322,17 @@
     }
 
     /* 大鼠标样式 */
-    body.large-cursor {
+    .container.large-cursor,
+    .container.large-cursor a,
+    .container.large-cursor a:hover,
+    .container.large-cursor img,
+    .container.large-cursor img:hover,
+    .container.large-cursor input,
+    .container.large-cursor button,
+    .container.large-cursor span,
+    .container.large-cursor li,
+    .container.large-cursor i,
+    .container.large-cursor div{
       /* cursor: url('./svg/cursor-svgrepo-com.svg'), auto !important; */
       cursor: url("data:image/svg+xml,%3Csvg width='64' height='64' viewBox='0 0 24 24' fill='none' xmlns='http://www.w3.org/2000/svg' stroke='%2303fcec'%3E%3Cpath fill-rule='evenodd' clip-rule='evenodd' d='M1.5 4.075C.897 2.467 2.467.897 4.075 1.5l17.14 6.428c1.907.715 1.65 3.488-.354 3.842l-7.727 1.364-1.364 7.727c-.354 2.005-3.127 2.26-3.842.354L1.5 4.075zm1.873-.702L9.8 20.513l1.364-7.727a2 2 0 0 1 1.622-1.622L20.513 9.8 3.373 3.373z' fill='%237300ff'/%3E%3C/svg%3E"), auto !important;
     }
@@ -389,7 +399,7 @@
     }
 
     /* 触摸设备适配：隐藏不适用的按钮 */
-    body.touch-device #large-cursor {
+    .container.touch-device #large-cursor {
       display: none !important;
     }
 
